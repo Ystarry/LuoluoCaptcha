@@ -1,5 +1,7 @@
 # luoluo-captcha
 
+English | [中文](./README.zh-CN.md)
+
 **luoluo** (落落) is taken from the Chinese idiom *luò luò dà fāng* (落落大方), meaning natural, graceful, and unpretentious. This library aims to provide a captcha solution that is simple, straightforward, and elegantly easy to use.
 
 A pure TypeScript captcha image generation library for Node.js (compiled to JavaScript). No native canvas modules required.

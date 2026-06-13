@@ -1,5 +1,7 @@
 # luoluo-captcha
 
+[English](./README.md) | 中文
+
 **落落**（luoluo）取自成语“落落大方”，寓意自然、大方、毫不拘束。本库也希望像这个名字一样，为你提供一种简单、直接、优雅易用的验证码方案。
 
 一个纯 TypeScript 实现的 Node.js 图形验证码库（编译后为 JavaScript），无需安装 canvas 等原生模块。
@@ -95,12 +97,12 @@ console.log('答案:', arithmetic.text()); // 计算结果
 
 所有验证码类均提供以下方法：
 
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `text()` | `string` | 返回正确答案。算术验证码返回计算结果。 |
-| `toBuffer()` | `Buffer` | 返回图片 Buffer（PNG 或 GIF）。 |
-| `toBase64()` | `string` | 返回 base64 编码的图片数据（不含 data URI 前缀）。 |
-| `out(stream)` | `boolean` | 将图片写入可写流。 |
+| 方法            | 返回值       | 说明                                 |
+| ------------- | --------- | ---------------------------------- |
+| `text()`      | `string`  | 返回正确答案。算术验证码返回计算结果。                |
+| `toBuffer()`  | `Buffer`  | 返回图片 Buffer（PNG 或 GIF）。            |
+| `toBase64()`  | `string`  | 返回 base64 编码的图片数据（不含 data URI 前缀）。 |
+| `out(stream)` | `boolean` | 将图片写入可写流。                          |
 
 ### SpecCaptcha
 
@@ -108,11 +110,11 @@ console.log('答案:', arithmetic.text()); // 计算结果
 new SpecCaptcha(width?, height?, len?, fontPath?)
 ```
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `width` | `130` | 图片宽度 |
-| `height` | `48` | 图片高度 |
-| `len` | `4` | 字符数量 |
+| 参数         | 默认值         | 说明                                |
+| ---------- | ----------- | --------------------------------- |
+| `width`    | `130`       | 图片宽度                              |
+| `height`   | `48`        | 图片高度                              |
+| `len`      | `4`         | 字符数量                              |
 | `fontPath` | `undefined` | TTF/OTF 字体路径。不传则使用内置字体，若不可用会抛出错误。 |
 
 ### GifCaptcha
@@ -129,11 +131,11 @@ new GifCaptcha(width?, height?, len?, fontPath?)
 new ChineseCaptcha(width?, height?, len?, fontPath?)
 ```
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `width` | `130` | 图片宽度 |
-| `height` | `48` | 图片高度 |
-| `len` | `4` | 汉字数量 |
+| 参数         | 默认值         | 说明                                        |
+| ---------- | ----------- | ----------------------------------------- |
+| `width`    | `130`       | 图片宽度                                      |
+| `height`   | `48`        | 图片高度                                      |
+| `len`      | `4`         | 汉字数量                                      |
 | `fontPath` | `undefined` | 中文字体路径（TTF/OTF/TTC）。不传则自动查找系统字体，找不到会抛出错误。 |
 
 ### ChineseGifCaptcha
@@ -150,21 +152,21 @@ new ChineseGifCaptcha(width?, height?, len?, fontPath?)
 new ArithmeticCaptcha(width?, height?, len?, fontPath?)
 ```
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `width` | `130` | 图片宽度 |
-| `height` | `48` | 图片高度 |
-| `len` | `2` | 运算数个数（例如 `2` 表示 `a op b`，即一个运算符） |
-| `fontPath` | `undefined` | TTF/OTF 字体路径，用于渲染算式。 |
+| 参数         | 默认值         | 说明                               |
+| ---------- | ----------- | -------------------------------- |
+| `width`    | `130`       | 图片宽度                             |
+| `height`   | `48`        | 图片高度                             |
+| `len`      | `2`         | 运算数个数（例如 `2` 表示 `a op b`，即一个运算符） |
+| `fontPath` | `undefined` | TTF/OTF 字体路径，用于渲染算式。             |
 
 额外方法：
 
-| 方法 | 说明 |
-|------|------|
+| 方法                          | 说明                                     |
+| --------------------------- | -------------------------------------- |
 | `setDigits(digits: number)` | 设置每个运算数的位数。`1` = 0-9，`2` = 10-99，以此类推。 |
-| `getDigits()` | 返回当前位数设置。 |
-| `getArithmeticString()` | 返回图片上显示的算式文本，例如 `"5+3=?"`。 |
-| `text()` | 返回**计算结果**，例如 `"8"`。你需要保存这个值用于后续校验。 |
+| `getDigits()`               | 返回当前位数设置。                              |
+| `getArithmeticString()`     | 返回图片上显示的算式文本，例如 `"5+3=?"`。             |
+| `text()`                    | 返回**计算结果**，例如 `"8"`。你需要保存这个值用于后续校验。    |
 
 ## HTTP 接口示例
 
@@ -254,25 +256,25 @@ export class CaptchaController {
 
 ### 优势
 
-| 维度 | 评价 |
-|------|------|
+| 维度       | 评价                                                       |
+| -------- | -------------------------------------------------------- |
 | **跨平台性** | 不依赖 `canvas` / `@napi-rs/canvas` 等原生模块，可在任何 Node.js 环境运行 |
-| **功能覆盖** | 支持 PNG / GIF / 中文 / 算术，覆盖常见业务场景 |
-| **接口友好** | 同时支持 `new XxxCaptcha()` 直接调用和 NestJS HTTP 接口 |
-| **安全设计** | 不保存答案，由调用方自行管理，避免库内部状态带来的并发问题 |
-| **字体渲染** | 基于 `opentype.js` 的纯 JS 字形光栅化，不依赖系统图形栈 |
+| **功能覆盖** | 支持 PNG / GIF / 中文 / 算术，覆盖常见业务场景                          |
+| **接口友好** | 同时支持 `new XxxCaptcha()` 直接调用和 NestJS HTTP 接口             |
+| **安全设计** | 不保存答案，由调用方自行管理，避免库内部状态带来的并发问题                            |
+| **字体渲染** | 基于 `opentype.js` 的纯 JS 字形光栅化，不依赖系统图形栈                    |
 
 ### 已修复的风险项
 
-| 风险项 | 原评级 | 修复方案 | 状态 |
-|--------|--------|----------|------|
-| **生产构建缺失字体文件** | 🔴 高风险 | `nest-cli.json` 增加 `assets: ["fonts/**/*"]`，构建时自动复制内置字体到 `dist/` | ✅ 已修复 |
-| **字体路径鲁棒性** | 🟡 中风险 | 重写 `FontManager` 的 `fontsDir` 探测逻辑，按 `process.cwd()` → `__dirname` → `require.resolve` 多级回退，并提供清晰的错误信息 | ✅ 已修复 |
-| **类型安全** | 🟢 低风险 | 在 `draw.ts` 中定义 `OpentypeFont` / `OpentypePath` 接口，替换所有 `any` 类型 | ✅ 已修复 |
-| **TTC / cmap 兼容性** | 🟡 中风险 | `loadFont` 自动检测 `.ttc` 文件，通过 `ttc-extract.ts` 提取子字体后再解析；保留 `opentype.js@1.3.4` 以确保 cmap format 6 兼容 | ✅ 已修复 |
-| **性能瓶颈** | 🟢 低风险 | 在 `draw.ts` 中增加字形缓存（`glyphCache`），以 `${fontPath}#${char}#${fontSize}` 为 key 缓存光栅化结果，并提供 `clearGlyphCache()` 供外部清理 | ✅ 已修复 |
-| **测试缺失** | 🔴 高风险 | 新增 `test/captcha.spec.ts`（6 个单元测试）和 `test/app.e2e-spec.ts`（2 个接口测试），覆盖全部 5 种验证码类型 | ✅ 已修复 |
-| **README 技术描述** | - | 将“纯 JavaScript 实现”修正为“纯 TypeScript 实现（编译后为 JavaScript）”，与项目实际技术栈保持一致 | ✅ 已修复 |
+| 风险项                | 原评级    | 修复方案                                                                                                              | 状态    |
+| ------------------ | ------ | ----------------------------------------------------------------------------------------------------------------- | ----- |
+| **生产构建缺失字体文件**     | 🔴 高风险 | `nest-cli.json` 增加 `assets: ["fonts/**/*"]`，构建时自动复制内置字体到 `dist/`                                                  | ✅ 已修复 |
+| **字体路径鲁棒性**        | 🟡 中风险 | 重写 `FontManager` 的 `fontsDir` 探测逻辑，按 `process.cwd()` → `__dirname` → `require.resolve` 多级回退，并提供清晰的错误信息            | ✅ 已修复 |
+| **类型安全**           | 🟢 低风险 | 在 `draw.ts` 中定义 `OpentypeFont` / `OpentypePath` 接口，替换所有 `any` 类型                                                  | ✅ 已修复 |
+| **TTC / cmap 兼容性** | 🟡 中风险 | `loadFont` 自动检测 `.ttc` 文件，通过 `ttc-extract.ts` 提取子字体后再解析；保留 `opentype.js@1.3.4` 以确保 cmap format 6 兼容               | ✅ 已修复 |
+| **性能瓶颈**           | 🟢 低风险 | 在 `draw.ts` 中增加字形缓存（`glyphCache`），以 `${fontPath}#${char}#${fontSize}` 为 key 缓存光栅化结果，并提供 `clearGlyphCache()` 供外部清理 | ✅ 已修复 |
+| **测试缺失**           | 🔴 高风险 | 新增 `test/captcha.spec.ts`（6 个单元测试）和 `test/app.e2e-spec.ts`（2 个接口测试），覆盖全部 5 种验证码类型                                 | ✅ 已修复 |
+| **README 技术描述**    | -      | 将“纯 JavaScript 实现”修正为“纯 TypeScript 实现（编译后为 JavaScript）”，与项目实际技术栈保持一致                                              | ✅ 已修复 |
 
 ### 遗留注意事项
 
