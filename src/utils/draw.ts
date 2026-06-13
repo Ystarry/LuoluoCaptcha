@@ -249,7 +249,40 @@ export class RgbaImage {
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { extractFontFromTtc, isTtcFile } from './ttc-extract';
+import { isTtcFile, extractFontFromTtc } from './ttc-extract';
+
+interface OpentypePath {
+  commands: Array<{
+    type: string;
+    x?: number;
+    y?: number;
+    x1?: number;
+    y1?: number;
+    x2?: number;
+    y2?: number;
+  }>;
+  getBoundingBox(): { x1: number; x2: number; y1: number; y2: number };
+}
+
+interface OpentypeFont {
+  unitsPerEm: number;
+  ascender: number;
+  descender: number;
+  getPath(text: string, x: number, y: number, fontSize: number): OpentypePath;
+  stringToGlyphs(text: string): Array<{
+    advanceWidth?: number;
+    getMetrics(): { leftSideBearing: number };
+  }>;
+  tables?: {
+    os2?: {
+      sCapHeight?: number;
+      yStrikeoutSize?: number;
+      ySubscriptYSize?: number;
+      ySuperscriptYSize?: number;
+      usWeightClass?: number;
+    };
+  };
+}
 
 /** 单个点（坐标是整数像素） / Single point (coordinates are integer pixels) */
 interface Point {
@@ -260,10 +293,19 @@ interface Point {
 /** 已加载字体的缓存 / Cache for loaded fonts */
 const fontCache = new Map<string, any>();
 
+interface GlyphCache {
+  bitmap: number[]; // RGBA 像素数组
+  width: number;
+  height: number;
+  top: number;
+  left: number;
+}
+const glyphCache = new Map<string, GlyphCache>();
+
 /** 从文件路径加载字体（同步，带缓存）；失败返回 null。 / Load font from file path (synchronous, with cache); returns null on failure.
  *  自动识别 TTC（TrueType Collection）文件。 / Automatically detects TTC (TrueType Collection) files.
  */
-function loadFont(filePath: string): any | null {
+function loadFont(filePath: string): OpentypeFont | null {
   if (fontCache.has(filePath)) {
     const cached = fontCache.get(filePath)!;
     if (cached !== null) return cached;
@@ -272,17 +314,28 @@ function loadFont(filePath: string): any | null {
   }
   try {
     const opentype = require('opentype.js');
-    let font: any;
+    let font: OpentypeFont | undefined;
     if (isTtcFile(filePath)) {
       const bytes = extractFontFromTtc(filePath, 0);
-      if (!bytes || bytes.byteLength === 0) {
-        return null;
+      if (bytes && bytes.byteLength > 0) {
+        try {
+          const ab = bytes.buffer.slice(
+            bytes.byteOffset,
+            bytes.byteOffset + bytes.byteLength,
+          );
+          font = opentype.parse(ab);
+        } catch (e) {
+          // 提取成功但解析失败，继续回退到直接 parse 原始 buffer
+        }
       }
-      const ab = bytes.buffer.slice(
-        bytes.byteOffset,
-        bytes.byteOffset + bytes.byteLength,
-      );
-      font = opentype.parse(ab);
+      if (!font) {
+        const buffer = fs.readFileSync(filePath);
+        const ab = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength,
+        );
+        font = opentype.parse(ab);
+      }
     } else {
       const buffer = fs.readFileSync(filePath);
       const ab = buffer.buffer.slice(
@@ -291,15 +344,15 @@ function loadFont(filePath: string): any | null {
       );
       font = opentype.parse(ab);
     }
-    fontCache.set(filePath, font);
-    return font;
+    fontCache.set(filePath, font!);
+    return font!;
   } catch (e) {
     return null;
   }
 }
 
 /** 把 opentype.Path 转成"子路径 + 点数组"，方便扫描线填充 / Convert opentype.Path to "subpaths + point arrays" for scanline filling */
-function pathToSubpaths(fontPath: any): Point[][] {
+function pathToSubpaths(fontPath: OpentypePath): Point[][] {
   const subpaths: Point[][] = [];
   let current: Point[] = [];
   // opentype.Path 的 commands 数组形如： / The commands array of opentype.Path looks like:
@@ -309,15 +362,15 @@ function pathToSubpaths(fontPath: any): Point[][] {
     const t = cmd.type || cmd.type;
     if (t === 'M') {
       if (current.length > 0) subpaths.push(current);
-      current = [{ x: cmd.x, y: cmd.y }];
+      current = [{ x: cmd.x!, y: cmd.y! }];
     } else if (t === 'L') {
-      current.push({ x: cmd.x, y: cmd.y });
+      current.push({ x: cmd.x!, y: cmd.y! });
     } else if (t === 'C') {
       // 三次 Bezier → 用 10 段折线近似 / Cubic Bezier -> approximated with 10 line segments
       const p0 = current[current.length - 1];
-      const p1 = { x: cmd.x1, y: cmd.y1 };
-      const p2 = { x: cmd.x2, y: cmd.y2 };
-      const p3 = { x: cmd.x, y: cmd.y };
+      const p1 = { x: cmd.x1!, y: cmd.y1! };
+      const p2 = { x: cmd.x2!, y: cmd.y2! };
+      const p3 = { x: cmd.x!, y: cmd.y! };
       for (let i = 1; i <= 10; i++) {
         const u = i / 10;
         const um = 1 - u;
@@ -336,8 +389,8 @@ function pathToSubpaths(fontPath: any): Point[][] {
     } else if (t === 'Q') {
       // 二次 Bezier / Quadratic Bezier
       const p0 = current[current.length - 1];
-      const p1 = { x: cmd.x1, y: cmd.y1 };
-      const p2 = { x: cmd.x, y: cmd.y };
+      const p1 = { x: cmd.x1!, y: cmd.y1! };
+      const p2 = { x: cmd.x!, y: cmd.y! };
       for (let i = 1; i <= 10; i++) {
         const u = i / 10;
         const um = 1 - u;
@@ -451,6 +504,42 @@ export function drawTextWithFont(
     return;
   }
 
+  if (text.length === 1) {
+    const cacheKey = `${fontPath}#${text}#${fontSize}`;
+    let cache = glyphCache.get(cacheKey);
+    if (!cache) {
+      const relPath = font.getPath(text, 0, 0, fontSize);
+      const box = relPath.getBoundingBox();
+      const left = box.x1;
+      const top = -box.y1;
+      const gw = Math.max(1, Math.ceil(box.x2 - box.x1));
+      const gh = Math.max(1, Math.ceil(box.y2 - box.y1));
+
+      const shiftedPath = font.getPath(text, -left, -box.y1, fontSize);
+      const subpaths = pathToSubpaths(shiftedPath);
+      const filled = rasterizeSubpaths(subpaths, gw, gh);
+
+      const bitmap = new Array(gw * gh * 4).fill(0);
+      for (const idx of filled) {
+        bitmap[idx * 4 + 3] = 255;
+      }
+
+      cache = { bitmap, width: gw, height: gh, top, left };
+      glyphCache.set(cacheKey, cache);
+    }
+
+    const startX = x + Math.round(cache.left);
+    const startY = y - Math.round(cache.top);
+    for (let i = 0; i < cache.bitmap.length; i += 4) {
+      if (cache.bitmap[i + 3] > 0) {
+        const px = (i / 4) % cache.width;
+        const py = Math.floor((i / 4) / cache.width);
+        img.setPixel(startX + px, startY + py, color[0], color[1], color[2]);
+      }
+    }
+    return;
+  }
+
   const textPath = font.getPath(text, x, y, fontSize);
   const subpaths = pathToSubpaths(textPath);
   const pixels = rasterizeSubpaths(subpaths, img.width, img.height);
@@ -491,4 +580,9 @@ export function measureTextWithFont(
   if (box.x2 === box.x1)
     return text.length * Math.max(4, Math.floor(fontSize * 0.7));
   return Math.max(4, Math.ceil(box.x2 - box.x1));
+}
+
+/** 清空字形缓存，供内存紧张时调用 / Clear glyph cache, for use when memory is tight */
+export function clearGlyphCache(): void {
+  glyphCache.clear();
 }

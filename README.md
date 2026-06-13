@@ -2,7 +2,7 @@
 
 **luoluo** (落落) is taken from the Chinese idiom *luò luò dà fāng* (落落大方), meaning natural, graceful, and unpretentious. This library aims to provide a captcha solution that is simple, straightforward, and elegantly easy to use.
 
-A pure JavaScript captcha image generation library for Node.js. No native canvas modules required.
+A pure TypeScript captcha image generation library for Node.js (compiled to JavaScript). No native canvas modules required.
 
 Supports 5 captcha types: `SpecCaptcha`, `GifCaptcha`, `ChineseCaptcha`, `ChineseGifCaptcha`, `ArithmeticCaptcha`.
 
@@ -253,6 +253,37 @@ export class CaptchaController {
 - Built-in 10 English fonts are located in the `fonts/` directory.
 - For `ChineseCaptcha` and `ChineseGifCaptcha`, a Chinese font is required. The library will auto-detect common system fonts (PingFang, STHeiti, Microsoft YaHei, NotoSansCJK, etc.).
 - You can provide a custom font path via the `fontPath` constructor argument.
+
+## Project Assessment & Improvement Log
+
+A comprehensive assessment of the project and the improvements already made.
+
+### Strengths
+
+| Dimension | Assessment |
+|-----------|------------|
+| **Cross-platform** | No native dependencies like `canvas` or `@napi-rs/canvas`; runs in any Node.js environment |
+| **Feature coverage** | Supports PNG, GIF, Chinese, and arithmetic captchas, covering most business scenarios |
+| **API ergonomics** | Supports both `new XxxCaptcha()` direct usage and NestJS HTTP endpoints |
+| **Security design** | Does not store answers internally; callers manage verification, avoiding concurrency issues |
+| **Font rendering** | Pure JS glyph rasterization via `opentype.js`, no reliance on system graphics stack |
+
+### Fixed Risk Items
+
+| Risk | Original Severity | Fix | Status |
+|------|-------------------|-----|--------|
+| **Missing font files in production builds** | 🔴 High | Added `assets: ["fonts/**/*"]` to `nest-cli.json` so built-in fonts are copied to `dist/` automatically | ✅ Fixed |
+| **Font path robustness** | 🟡 Medium | Rewrote `FontManager` `fontsDir` detection with fallback chain: `process.cwd()` → `__dirname` → `require.resolve`, plus clearer error messages | ✅ Fixed |
+| **Type safety** | 🟢 Low | Defined `OpentypeFont` / `OpentypePath` interfaces in `draw.ts` and replaced all `any` types | ✅ Fixed |
+| **TTC / cmap compatibility** | 🟡 Medium | `loadFont` now auto-detects `.ttc` files and extracts subfonts via `ttc-extract.ts` before parsing; kept `opentype.js@1.3.4` for cmap format 6 support | ✅ Fixed |
+| **Performance bottleneck** | 🟢 Low | Added `glyphCache` in `draw.ts` keyed by `${fontPath}#${char}#${fontSize}` to reuse rasterized glyphs, plus `clearGlyphCache()` for external cleanup | ✅ Fixed |
+| **Missing tests** | 🔴 High | Added `test/captcha.spec.ts` (6 unit tests) and `test/app.e2e-spec.ts` (2 endpoint tests) covering all 5 captcha types | ✅ Fixed |
+| **README tech description** | - | Corrected "pure JavaScript" to "pure TypeScript (compiled to JavaScript)" to match the actual tech stack | ✅ Fixed |
+
+### Remaining Notes
+
+- **opentype.js version lock**: Currently pinned to `1.3.4` to support macOS system Chinese fonts (cmap format 6). Consider upgrading when v2+ resolves this format, and update `loadFont` Buffer/ArrayBuffer handling accordingly.
+- **System Chinese font dependency**: `ChineseCaptcha` / `ChineseGifCaptcha` still require system Chinese fonts (e.g. PingFang, STHeiti, NotoSansCJK) or a custom `fontPath`.
 
 ## License
 

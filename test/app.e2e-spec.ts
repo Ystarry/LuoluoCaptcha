@@ -1,11 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { AppModule } from '../src/app.module';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,14 +15,28 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/captcha/spec (GET) should return PNG', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/captcha/spec')
       .expect(200)
-      .expect('Hello World!');
+      .expect('Content-Type', /image\/png/)
+      .expect(res => {
+        expect(res.headers['x-captcha-text']).toBeDefined();
+      });
   });
 
-  afterEach(async () => {
+  it('/captcha/arithmetic (GET) should return PNG with computed result', () => {
+    return request(app.getHttpServer())
+      .get('/captcha/arithmetic')
+      .expect(200)
+      .expect('Content-Type', /image\/png/)
+      .expect(res => {
+        const text = decodeURIComponent(res.headers['x-captcha-text']);
+        expect(text).toMatch(/^\d+$/);
+      });
+  });
+
+  afterAll(async () => {
     await app.close();
   });
 });

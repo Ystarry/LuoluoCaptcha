@@ -2,7 +2,7 @@
 
 **落落**（luoluo）取自成语“落落大方”，寓意自然、大方、毫不拘束。本库也希望像这个名字一样，为你提供一种简单、直接、优雅易用的验证码方案。
 
-一个纯 JavaScript 实现的 Node.js 图形验证码库，无需安装 canvas 等原生模块。
+一个纯 TypeScript 实现的 Node.js 图形验证码库（编译后为 JavaScript），无需安装 canvas 等原生模块。
 
 支持 5 种验证码类型：`SpecCaptcha`、`GifCaptcha`、`ChineseCaptcha`、`ChineseGifCaptcha`、`ArithmeticCaptcha`。
 
@@ -247,6 +247,37 @@ export class CaptchaController {
 - 内置 10 款英文字体，位于 `fonts/` 目录下。
 - `ChineseCaptcha` 和 `ChineseGifCaptcha` 需要中文字体支持。库会自动检测常见系统字体（PingFang、STHeiti、Microsoft YaHei、NotoSansCJK 等）。
 - 你也可以通过构造函数的 `fontPath` 参数传入自定义字体文件路径。
+
+## 项目评估与改进记录
+
+以下是对本项目的全面评估，以及已完成的改进项。
+
+### 优势
+
+| 维度 | 评价 |
+|------|------|
+| **跨平台性** | 不依赖 `canvas` / `@napi-rs/canvas` 等原生模块，可在任何 Node.js 环境运行 |
+| **功能覆盖** | 支持 PNG / GIF / 中文 / 算术，覆盖常见业务场景 |
+| **接口友好** | 同时支持 `new XxxCaptcha()` 直接调用和 NestJS HTTP 接口 |
+| **安全设计** | 不保存答案，由调用方自行管理，避免库内部状态带来的并发问题 |
+| **字体渲染** | 基于 `opentype.js` 的纯 JS 字形光栅化，不依赖系统图形栈 |
+
+### 已修复的风险项
+
+| 风险项 | 原评级 | 修复方案 | 状态 |
+|--------|--------|----------|------|
+| **生产构建缺失字体文件** | 🔴 高风险 | `nest-cli.json` 增加 `assets: ["fonts/**/*"]`，构建时自动复制内置字体到 `dist/` | ✅ 已修复 |
+| **字体路径鲁棒性** | 🟡 中风险 | 重写 `FontManager` 的 `fontsDir` 探测逻辑，按 `process.cwd()` → `__dirname` → `require.resolve` 多级回退，并提供清晰的错误信息 | ✅ 已修复 |
+| **类型安全** | 🟢 低风险 | 在 `draw.ts` 中定义 `OpentypeFont` / `OpentypePath` 接口，替换所有 `any` 类型 | ✅ 已修复 |
+| **TTC / cmap 兼容性** | 🟡 中风险 | `loadFont` 自动检测 `.ttc` 文件，通过 `ttc-extract.ts` 提取子字体后再解析；保留 `opentype.js@1.3.4` 以确保 cmap format 6 兼容 | ✅ 已修复 |
+| **性能瓶颈** | 🟢 低风险 | 在 `draw.ts` 中增加字形缓存（`glyphCache`），以 `${fontPath}#${char}#${fontSize}` 为 key 缓存光栅化结果，并提供 `clearGlyphCache()` 供外部清理 | ✅ 已修复 |
+| **测试缺失** | 🔴 高风险 | 新增 `test/captcha.spec.ts`（6 个单元测试）和 `test/app.e2e-spec.ts`（2 个接口测试），覆盖全部 5 种验证码类型 | ✅ 已修复 |
+| **README 技术描述** | - | 将“纯 JavaScript 实现”修正为“纯 TypeScript 实现（编译后为 JavaScript）”，与项目实际技术栈保持一致 | ✅ 已修复 |
+
+### 遗留注意事项
+
+- **opentype.js 版本锁定**：当前锁定 `1.3.4` 以支持 macOS 系统中文黑体（cmap format 6）。如后续 `opentype.js` v2+ 修复了该格式，可考虑升级并同步调整 `loadFont` 的 Buffer/ArrayBuffer 处理。
+- **中文字体系统依赖**：`ChineseCaptcha` / `ChineseGifCaptcha` 仍需系统安装中文字体（如 PingFang、STHeiti、NotoSansCJK），或通过 `fontPath` 参数传入自定义字体。
 
 ## 许可证
 

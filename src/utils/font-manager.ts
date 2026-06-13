@@ -48,40 +48,27 @@ export class FontManager {
   /** fonts/ 目录绝对路径（惰性求值） / Absolute path of fonts/ directory (lazily evaluated) */
   private static _fontsDir: string | null = null;
 
+  /** 上次探测 fonts 目录时尝试过的候选路径 / Candidate paths tried during the last fonts directory probe */
+  private static _triedPaths: string[] = [];
+
   private static get fontsDir(): string {
     let dir = FontManager._fontsDir;
     if (dir == null) {
       const candidates: string[] = [];
 
-      // 1) 当前项目结构的开发/生产模式：process.cwd()/src/fonts / 1) Dev/production mode for current project structure: process.cwd()/src/fonts
-      candidates.push(path.join(process.cwd(), 'src', 'fonts'));
-      // 2) 项目根目录的 fonts（若打包工具将字体复制到了根目录） / 2) fonts in project root (if bundler copied fonts to root)
-      candidates.push(path.join(process.cwd(), 'fonts'));
+      // 1) ts-node / 开发模式
+      candidates.push(path.resolve(process.cwd(), 'fonts'));
+      // 2) 开发模式备用
+      candidates.push(path.resolve(process.cwd(), 'src', 'fonts'));
+      // 3) dist/utils/font-manager.js → dist/fonts，生产模式
+      candidates.push(path.resolve(__dirname, '..', 'fonts'));
+      // 4) 如果目录结构更深
+      candidates.push(path.resolve(__dirname, '..', '..', 'fonts'));
 
-      // 3) 从 __dirname 推断（ts-node 运行时 __dirname 在 src/xxx 下） / 3) Infer from __dirname (ts-node runtime __dirname is under src/xxx)
-      try {
-        const mod: any = module;
-        if (mod?.filename) {
-          const here = path.dirname(mod.filename);
-          candidates.push(path.resolve(here, '..', 'fonts')); // src/fonts 当 here 是 src/captcha / src/fonts when here is src/captcha
-          candidates.push(path.resolve(here, '..', '..', 'src', 'fonts')); // 当 here 是 dist/captcha / when here is dist/captcha
-          candidates.push(path.resolve(here, '..', '..', 'fonts')); // 当 here 是 dist/captcha 且 fonts 在根目录 / when here is dist/captcha and fonts is in root
-        }
-      } catch {
-        /* ignore */
-      }
-
-      // 4) ESM import.meta.url / 4) ESM import.meta.url
-      try {
-        const meta: any = (globalThis as any).import?.meta;
-        if (meta?.url) {
-          const here = path.dirname(new URL(meta.url).pathname);
-          candidates.push(path.resolve(here, '..', 'fonts'));
-          candidates.push(path.resolve(here, '..', '..', 'src', 'fonts'));
-          candidates.push(path.resolve(here, '..', '..', 'fonts'));
-        }
-      } catch {
-        /* ignore */
+      // 5) npm 包根目录
+      const pkgFonts = FontManager.resolvePackageFontsDir();
+      if (pkgFonts) {
+        candidates.push(pkgFonts);
       }
 
       for (const p of candidates) {
@@ -92,11 +79,27 @@ export class FontManager {
         }
       }
 
-      // fallback：使用第一个候选路径（即使不存在，后续操作会报具体错误） / fallback: use the first candidate path (even if not exists, subsequent operations will report specific errors)
-      dir = candidates[0] ?? path.join(process.cwd(), 'src', 'fonts');
+      // fallback：记录已尝试的路径并使用第一个候选
+      FontManager._triedPaths = candidates;
+      dir = candidates[0] ?? path.resolve(process.cwd(), 'fonts');
       FontManager._fontsDir = dir;
     }
     return dir;
+  }
+
+  /** 通过 require.resolve 定位 npm 包根目录下的 fonts / Locate fonts under npm package root via require.resolve */
+  public static resolvePackageFontsDir(): string | null {
+    try {
+      const pkgJsonPath = require.resolve('luoluo-captcha/package.json');
+      const pkgRoot = path.dirname(pkgJsonPath);
+      const fontsDir = path.join(pkgRoot, 'fonts');
+      if (fs.existsSync(fontsDir)) {
+        return fontsDir;
+      }
+    } catch {
+      /* ignore */
+    }
+    return null;
   }
 
   /** 已注册过的字体 family，避免重复调 register / Registered font families to avoid duplicate register calls */
@@ -131,7 +134,16 @@ export class FontManager {
       );
     }
     const fileName = FontManager.FONT_NAMES[idx];
-    const filePath = path.join(FontManager.fontsDir, fileName);
+    const fontsDir = FontManager.fontsDir;
+    if (!fs.existsSync(fontsDir)) {
+      const tried = FontManager._triedPaths;
+      const msg =
+        tried.length > 0
+          ? `fonts directory not found: ${fontsDir}\nTried directories:\n${tried.map((p) => '  - ' + p).join('\n')}`
+          : `fonts directory not found: ${fontsDir}`;
+      throw new Error(msg);
+    }
+    const filePath = path.join(fontsDir, fileName);
     if (!fs.existsSync(filePath)) {
       throw new Error(`font file not found: ${filePath}`);
     }

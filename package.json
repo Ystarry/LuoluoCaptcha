@@ -1,7 +1,7 @@
 {
   "name": "luoluo-captcha",
   "version": "0.0.1",
-  "description": "Pure JS captcha library for Node.js, no native canvas module required.",
+  "description": "Pure TypeScript captcha library for Node.js, no native canvas module required.",
   "author": "",
   "license": "MIT",
   "main": "dist/index.js",
@@ -76,15 +76,15 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage",
     "testEnvironment": "node"
   }
 }
