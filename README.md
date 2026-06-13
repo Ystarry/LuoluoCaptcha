@@ -12,7 +12,7 @@ Supports 5 captcha types: `SpecCaptcha`, `GifCaptcha`, `ChineseCaptcha`, `Chines
 
 ## Features
 
-- Pure JS implementation, no native dependencies like `canvas` or `@napi-rs/canvas`
+- Pure TypeScript implementation, no native dependencies like `canvas` or `@napi-rs/canvas`
 - PNG and GIF output
 - Chinese character support (requires system Chinese fonts or custom TTF)
 - Arithmetic captcha with configurable digits

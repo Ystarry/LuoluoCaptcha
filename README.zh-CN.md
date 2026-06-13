@@ -12,7 +12,7 @@
 
 ## 特性
 
-- 纯 JS 实现，无需 `canvas` 或 `@napi-rs/canvas` 等原生依赖
+- 纯 TypeScript 实现，无需 `canvas` 或 `@napi-rs/canvas` 等原生依赖
 - 支持 PNG 静态图与 GIF 动态图
 - 支持中文验证码（需系统中文字体或自定义字体文件）
 - 支持算术验证码，可配置运算位数
