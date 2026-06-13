@@ -8,16 +8,16 @@ import { CaptchaGraphics } from '../utils/graphics';
 import { CaptchaFont, FontManager, FontStyle } from '../utils/font-manager';
 
 /**
- * 验证码抽象类
+ * 验证码抽象类 / Captcha abstract class
  * @Author ystarry 2023-08-10
- * @Description 验证码抽象类，定义验证码的基本属性和方法
+ * @Description 验证码抽象类，定义验证码的基本属性和方法 / Captcha abstract class, defines basic properties and methods of captcha
  */
 export abstract class Captcha extends Randoms {
-  // 暴露内部类型给子类
+  // 暴露内部类型给子类 / Expose internal types to subclasses
   protected static readonly Color = Color;
   protected static readonly FontManager = FontManager;
   protected static readonly FontStyle = FontStyle;
-  // 常用颜色 [R, G, B]
+  // 常用颜色 [R, G, B] / Common colors [R, G, B]
   public static readonly COLOR: number[][] = [
     [0, 135, 255],
     [51, 153, 51],
@@ -33,15 +33,15 @@ export abstract class Captcha extends Randoms {
     [0, 51, 102],
   ];
 
-  // 验证码文本类型
-  public static readonly TYPE_DEFAULT = 1; // 字母数字混合
-  public static readonly TYPE_ONLY_NUMBER = 2; // 纯数字
-  public static readonly TYPE_ONLY_CHAR = 3; // 纯字母
-  public static readonly TYPE_ONLY_UPPER = 4; // 纯大写字母
-  public static readonly TYPE_ONLY_LOWER = 5; // 纯小写字母
-  public static readonly TYPE_NUM_AND_UPPER = 6; // 数字大写字母
+  // 验证码文本类型 / Captcha text types
+  public static readonly TYPE_DEFAULT = 1; // 字母数字混合 / Alphanumeric
+  public static readonly TYPE_ONLY_NUMBER = 2; // 纯数字 / Numbers only
+  public static readonly TYPE_ONLY_CHAR = 3; // 纯字母 / Letters only
+  public static readonly TYPE_ONLY_UPPER = 4; // 纯大写字母 / Uppercase letters only
+  public static readonly TYPE_ONLY_LOWER = 5; // 纯小写字母 / Lowercase letters only
+  public static readonly TYPE_NUM_AND_UPPER = 6; // 数字大写字母 / Numbers and uppercase letters
 
-  // 内置字体索引
+  // 内置字体索引 / Built-in font indices
   public static readonly FONT_1 = 0;
   public static readonly FONT_2 = 1;
   public static readonly FONT_3 = 2;
@@ -65,16 +65,16 @@ export abstract class Captcha extends Randoms {
     'scandal.ttf',
   ];
 
-  private font: CaptchaFont | null = null; // 验证码的字体（由 FontManager 提供）
-  protected len = 5; // 验证码随机字符长度
-  protected width = 130; // 验证码显示宽度
-  protected height = 48; // 验证码显示高度
-  protected charType = Captcha.TYPE_DEFAULT; // 验证码类型
-  protected chars: string | null = null; // 当前验证码
+  private font: CaptchaFont | null = null; // 验证码的字体（由 FontManager 提供） / Captcha font (provided by FontManager)
+  protected len = 5; // 验证码随机字符长度 / Random character length of captcha
+  protected width = 130; // 验证码显示宽度 / Captcha display width
+  protected height = 48; // 验证码显示高度 / Captcha display height
+  protected charType = Captcha.TYPE_DEFAULT; // 验证码类型 / Captcha type
+  protected chars: string | null = null; // 当前验证码 / Current captcha text
 
   /**
-   * 生成随机验证码字符数组
-   * @returns 验证码字符数组
+   * 生成随机验证码字符数组 / Generate random captcha character array
+   * @returns 验证码字符数组 / Captcha character array
    */
   protected alphas(): string[] {
     const cs: string[] = new Array(this.len);
@@ -104,10 +104,10 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 给定范围获得随机颜色（三通道独立随机）。
-   * @param fc 0-255，较小值；与 bc 顺序不敏感
-   * @param bc 0-255，较大值
-   * @returns 随机颜色
+   * 给定范围获得随机颜色（三通道独立随机）。 / Get random color within a given range (three channels randomized independently).
+   * @param fc 0-255，较小值；与 bc 顺序不敏感 / 0-255, smaller value; order insensitive with bc
+   * @param bc 0-255，较大值 / 0-255, larger value
+   * @returns 随机颜色 / Random color
    */
   protected randomColor(fc: number, bc: number): Color {
     const [lo, hi] = fc <= bc ? [fc, bc] : [bc, fc];
@@ -115,8 +115,8 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 从预设色板 (Captcha.COLOR) 中随机取一个颜色。
-   * @returns 随机常用颜色
+   * 从预设色板 (Captcha.COLOR) 中随机取一个颜色。 / Randomly pick a color from the preset palette (Captcha.COLOR).
+   * @returns 随机常用颜色 / Random common color
    */
   protected color(): Color {
     const palette = Captcha.COLOR;
@@ -125,37 +125,37 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 验证码输出，抽象方法，由子类实现（如 PngCaptcha / GifCaptcha）。
-   * @param os 可写流 (NodeJS.WritableStream / Writable)
-   * @return 是否成功写入
+   * 验证码输出，抽象方法，由子类实现（如 PngCaptcha / GifCaptcha）。 / Captcha output, abstract method, implemented by subclasses (e.g. PngCaptcha / GifCaptcha).
+   * @param os 可写流 (NodeJS.WritableStream / Writable) / Writable stream (NodeJS.WritableStream / Writable)
+   * @return 是否成功写入 / Whether write was successful
    */
   public abstract out(os: {
     write: (chunk: Buffer | Uint8Array | string) => unknown;
   }): boolean;
 
   /**
-   * 直接以 Buffer 的形式获取验证码图像。
+   * 直接以 Buffer 的形式获取验证码图像。 / Get captcha image directly as a Buffer.
    */
   public abstract toBuffer(): Buffer;
 
   /**
-   * 输出 base64 编码字符串（不含 data URL 前缀）。
-   * 默认实现：对 {@link toBuffer} 的结果做 base64 编码，子类可按需覆盖。
+   * 输出 base64 编码字符串（不含 data URL 前缀）。 / Output base64 encoded string (without data URL prefix).
+   * 默认实现：对 {@link toBuffer} 的结果做 base64 编码，子类可按需覆盖。 / Default implementation: base64 encodes the result of {@link toBuffer}, subclasses may override as needed.
    */
   public toBase64(): string {
     return this.toBuffer().toString('base64');
   }
 
   /**
-   * 输出带前缀的 data URL 形式的 base64 字符串。
-   * @param type data URL 前缀，如 "data:image/png;base64,"
+   * 输出带前缀的 data URL 形式的 base64 字符串。 / Output base64 string in data URL form with prefix.
+   * @param type data URL 前缀，如 "data:image/png;base64," / data URL prefix, e.g. "data:image/png;base64,"
    */
   public toBase64DataUri(type: string): string {
     return type + this.toBase64();
   }
 
   /**
-   * 获取当前的验证码文本（若尚未生成则立即生成）。
+   * 获取当前的验证码文本（若尚未生成则立即生成）。 / Get current captcha text (generate immediately if not yet generated).
    */
   public text(): string {
     this.checkAlpha();
@@ -163,7 +163,7 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 获取当前验证码的字符数组（若尚未生成则立即生成）。
+   * 获取当前验证码的字符数组（若尚未生成则立即生成）。 / Get current captcha character array (generate immediately if not yet generated).
    */
   public textArray(): string[] {
     this.checkAlpha();
@@ -171,7 +171,7 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 检查验证码是否生成，没有则立即生成。
+   * 检查验证码是否生成，没有则立即生成。 / Check if captcha is generated, generate immediately if not.
    */
   public checkAlpha(): void {
     if (this.chars == null) {
@@ -180,11 +180,11 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 随机画 num 条干扰线（颜色随机）。
+   * 随机画 num 条干扰线（颜色随机）。 / Randomly draw `num` interference lines (random colors).
    */
   public drawLine(num: number, g: CaptchaGraphics): void;
   /**
-   * 随机画 num 条干扰线。若 color 为 null / 未指定，每条线随机取色。
+   * 随机画 num 条干扰线。若 color 为 null / 未指定，每条线随机取色。 / Randomly draw `num` interference lines. If color is null / not specified, each line uses a random color.
    */
   public drawLine(num: number, g: CaptchaGraphics, color: Color | null): void;
   public drawLine(num: number, g: CaptchaGraphics, color?: Color | null): void {
@@ -199,10 +199,10 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 随机画 num 个干扰圆（颜色随机）。
+   * 随机画 num 个干扰圆（颜色随机）。 / Randomly draw `num` interference circles (random colors).
    */
   public drawOval(num: number, g: CaptchaGraphics): void;
-  /** 随机画 num 个干扰圆。若 color 为 null / 未指定，每个圆随机取色 */
+  /** 随机画 num 个干扰圆。若 color 为 null / 未指定，每个圆随机取色 / Randomly draw `num` interference circles. If color is null / not specified, each circle uses a random color */
   public drawOval(num: number, g: CaptchaGraphics, color: Color | null): void;
   public drawOval(num: number, g: CaptchaGraphics, color?: Color | null): void {
     for (let i = 0; i < num; i++) {
@@ -213,14 +213,14 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 随机画 num 条贝塞尔曲线（颜色随机）。
+   * 随机画 num 条贝塞尔曲线（颜色随机）。 / Randomly draw `num` Bezier curves (random colors).
    */
   public drawBesselLine(num: number, g: CaptchaGraphics): void;
   /**
-   * 随机画 num 条贝塞尔曲线：
-   *   - 50% 概率画二阶（二次）
-   *   - 50% 概率画三阶（三次）
-   *   - 50% 概率交换 y1 / y2（使曲线上下弯曲更随机）
+   * 随机画 num 条贝塞尔曲线： / Randomly draw `num` Bezier curves:
+   *   - 50% 概率画二阶（二次） / 50% chance to draw quadratic (second-order)
+   *   - 50% 概率画三阶（三次） / 50% chance to draw cubic (third-order)
+   *   - 50% 概率交换 y1 / y2（使曲线上下弯曲更随机） / 50% chance to swap y1 / y2 (making curves bend more randomly)
    */
   public drawBesselLine(
     num: number,
@@ -262,7 +262,7 @@ export abstract class Captcha extends Randoms {
   }
 
   /**
-   * 获取当前字体（首次调用若未设置，默认使用 FONT_1；FONT_1 加载失败则退化为 Arial 32）。
+   * 获取当前字体（首次调用若未设置，默认使用 FONT_1；FONT_1 加载失败则退化为 Arial 32）。 / Get current font (if not set on first call, default to FONT_1; fall back to Arial 32 if FONT_1 fails to load).
    */
   public getFont(): CaptchaFont {
     if (this.font == null) {
@@ -281,11 +281,11 @@ export abstract class Captcha extends Randoms {
     return this.font as CaptchaFont;
   }
 
-  /** 直接设置字体对象 */
+  /** 直接设置字体对象 / Set font object directly */
   public setFont(font: CaptchaFont): void;
-  /** 按内置字体索引设置字体（默认 size=32, style=BOLD） */
+  /** 按内置字体索引设置字体（默认 size=32, style=BOLD） / Set font by built-in font index (default size=32, style=BOLD) */
   public setFont(font: number): void;
-  /** 按内置字体索引 + (style, size) 设置字体（与 Java API 对齐） */
+  /** 按内置字体索引 + (style, size) 设置字体（与 Java API 对齐） / Set font by built-in index + (style, size) (aligned with Java API) */
   public setFont(font: number, style: number, size: number): void;
   public setFont(
     font: number | CaptchaFont,
@@ -301,7 +301,7 @@ export abstract class Captcha extends Randoms {
     this.font = FontManager.getFont(font, finalStyle, finalSize);
   }
 
-  /* ------ 基本属性的 getter / setter ------ */
+  /* ------ 基本属性的 getter / setter / Basic property getters / setters ------ */
 
   public getLen(): number {
     return this.len;

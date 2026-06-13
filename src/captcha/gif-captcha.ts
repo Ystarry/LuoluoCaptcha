@@ -9,8 +9,8 @@ import {
 import { GifEncoder } from '../utils/gif';
 
 /**
- * 英文图形验证码（GIF）。每帧高亮一个字符，其他字符灰色。
- * 逐帧绘制，200ms/帧。
+ * 英文图形验证码（GIF）。每帧高亮一个字符，其他字符灰色。 / English image CAPTCHA (GIF). Highlights one character per frame, others are gray.
+ * 逐帧绘制，200ms/帧。 / Drawn frame by frame, 200ms per frame.
  */
 export class GifCaptcha extends Captcha {
   private _ttfPath: string | null = null;
@@ -36,7 +36,7 @@ export class GifCaptcha extends Captcha {
     this.setLen(len ?? 4);
 
     if (fontPath === undefined) {
-      // 默认逻辑：优先使用内置字体
+      // 默认逻辑：优先使用内置字体 / Default logic: prioritize built-in fonts
       try {
         const files = FontManager.listFontFiles();
         this._ttfPath = files[0] ?? null;
@@ -44,7 +44,7 @@ export class GifCaptcha extends Captcha {
         this._ttfPath = null;
       }
     } else if (fontPath === null) {
-      // 明确不使用项目字体（系统字体模式）
+      // 明确不使用项目字体（系统字体模式） / Explicitly do not use project fonts (system font mode)
       this._ttfPath = null;
     } else {
       this._ttfPath = fontPath;
@@ -65,7 +65,7 @@ export class GifCaptcha extends Captcha {
     for (let frame = 0; frame < chars.length; frame++) {
       const img = new RgbaImage(w, h, [255, 255, 255]);
 
-      // 干扰圆
+      // 干扰圆 / Interference circles
       for (let i = 0; i < 5 + this.num(4); i++) {
         img.drawOval(
           this.num(w),
@@ -75,7 +75,7 @@ export class GifCaptcha extends Captcha {
           palette[this.num(palette.length)],
         );
       }
-      // 干扰曲线
+      // 干扰曲线 / Interference curves
       for (let i = 0; i < 1 + this.num(2); i++) {
         img.drawQuad(
           5,
@@ -88,7 +88,7 @@ export class GifCaptcha extends Captcha {
         );
       }
 
-      // 字符
+      // 字符 / Characters
       for (let i = 0; i < chars.length; i++) {
         const ch = chars[i];
         const isActive = i === frame;

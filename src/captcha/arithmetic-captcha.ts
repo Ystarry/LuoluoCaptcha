@@ -9,14 +9,14 @@ import {
 import { encodePng } from '../utils/png';
 
 /**
- * 算术验证码（PNG）。
+ * 算术验证码（PNG）。 / Arithmetic CAPTCHA (PNG).
  *
- * 绘制 `a op b = ?`（如 `5+3=?`）——正确答案由
- * `ArithmeticCaptchaAbstract.text()` 返回（如 "8"）。
+ * 绘制 `a op b = ?`（如 `5+3=?`）——正确答案由 / Draws `a op b = ?` (e.g. `5+3=?`) — the correct answer is
+ * `ArithmeticCaptchaAbstract.text()` 返回（如 "8"）。 / returned by `ArithmeticCaptchaAbstract.text()` (e.g. "8").
  *
- * 支持配置字体：
- * - 传入 fontPath 时，使用 TTF/OTF 字体渲染；
- * - 未传入或传入 null 时，不生成算术验证码。
+ * 支持配置字体： / Supports font configuration:
+ * - 传入 fontPath 时，使用 TTF/OTF 字体渲染； / - When fontPath is provided, renders with TTF/OTF font;
+ * - 未传入或传入 null 时，不生成算术验证码。 / - When not provided or null, does not generate arithmetic CAPTCHA.
  */
 export class ArithmeticCaptcha extends ArithmeticCaptchaAbstract {
   private _ttfPath: string | null = null;
@@ -50,7 +50,7 @@ export class ArithmeticCaptcha extends ArithmeticCaptchaAbstract {
     const img = new RgbaImage(w, h, [255, 255, 255]);
 
     const palette = this._palette();
-    // 干扰圆
+    // 干扰圆 / Interference circles
     for (let i = 0; i < 4 + this.num(4); i++) {
       img.drawOval(
         this.num(w),
@@ -60,7 +60,7 @@ export class ArithmeticCaptcha extends ArithmeticCaptchaAbstract {
         palette[this.num(palette.length)],
       );
     }
-    // 干扰线
+    // 干扰线 / Interference lines
     for (let i = 0; i < 1 + this.num(2); i++) {
       const c = palette[this.num(palette.length)];
       img.drawQuad(
@@ -74,7 +74,7 @@ export class ArithmeticCaptcha extends ArithmeticCaptchaAbstract {
       );
     }
 
-    // 居中绘制算术式
+    // 居中绘制算术式 / Draw arithmetic expression centered
     const chars = expr.split('');
     const renderChar = (ch: string): string => (ch === '×' ? 'x' : ch);
 
@@ -82,14 +82,14 @@ export class ArithmeticCaptcha extends ArithmeticCaptchaAbstract {
       throw new Error('算术验证码需要配置可用的 TTF/OTF 字体');
     }
 
-    // 全部字符使用 TTF；字体没有 × 时，用 TTF 中的 x 作为乘号显示
+    // 全部字符使用 TTF；字体没有 × 时，用 TTF 中的 x 作为乘号显示 / All characters use TTF; when font lacks ×, use TTF x as multiplication sign
     const fontSize = Math.max(
       16,
       Math.min(h - 4, Math.floor((w / chars.length) * 1.65)),
     );
     const baselineY = computeBaselineY(this._ttfPath, fontSize, h);
 
-    // 先计算总宽度
+    // 先计算总宽度 / Calculate total width first
     let totalW = 0;
     const charWidths: number[] = [];
     for (const ch of chars) {

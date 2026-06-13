@@ -1,12 +1,12 @@
 import { deflateSync } from 'zlib';
 
 /**
- * 最小的 PNG 编码器。
- * 支持：24bit RGB，无透明通道；直接从 `number[][]`（RGB 三元组）或
- * `Buffer` (length = width*height*3) 产生 PNG 字节流。
+ * 最小的 PNG 编码器。 / Minimal PNG encoder.
+ * 支持：24bit RGB，无透明通道；直接从 `number[][]`（RGB 三元组）或 / Supports: 24-bit RGB, no alpha channel; directly produces PNG byte stream from `number[][]` (RGB triples) or
+ * `Buffer` (length = width*height*3) 产生 PNG 字节流。 / `Buffer` (length = width*height*3).
  *
- * 这个实现只需要 Node.js 内建能力，避免了 @napi-rs/canvas 的安装负担，
- * 对验证码这种场景足够快。
+ * 这个实现只需要 Node.js 内建能力，避免了 @napi-rs/canvas 的安装负担， / This implementation only requires Node.js built-in capabilities, avoiding the installation burden of @napi-rs/canvas,
+ * 对验证码这种场景足够快。 / fast enough for captcha scenarios.
  */
 export function encodePng(
   width: number,
@@ -28,7 +28,7 @@ export function encodePng(
   ihdr[11] = 0; // filter method
   ihdr[12] = 0; // interlace method = none
 
-  // 3) IDAT chunk: 每行前加一个 filter byte (0), 然后是 RGB 数据
+  // 3) IDAT chunk: 每行前加一个 filter byte (0), 然后是 RGB 数据 / 3) IDAT chunk: prepend a filter byte (0) per row, then RGB data
   const raw = Buffer.alloc((width * 3 + 1) * height);
   const src = Buffer.isBuffer(pixels)
     ? pixels

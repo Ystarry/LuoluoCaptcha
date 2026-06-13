@@ -1,8 +1,8 @@
 /**
  * LuoluoCaptcha
  *
- * 提供 5 种图形验证码，无需 canvas 原生模块，纯 JS 实现。
- * 项目不保存验证码，由调用方自行管理答案。
+ * 提供 5 种图形验证码，无需 canvas 原生模块，纯 JS 实现。 / Provides 5 types of image captchas, no native canvas module required, pure JS implementation.
+ * 项目不保存验证码，由调用方自行管理答案。 / The project does not store captchas; the caller manages the answer itself.
  */
 
 export { Captcha } from './base/captcha';
@@ -16,7 +16,14 @@ export { ChineseGifCaptcha } from './captcha/chinese-gif-captcha';
 export { ArithmeticCaptcha } from './captcha/arithmetic-captcha';
 
 export { CaptchaService } from './captcha/captcha.service';
-export type { CaptchaType, CaptchaImageResult } from './captcha/captcha.service';
+export type {
+  CaptchaType,
+  CaptchaImageResult,
+} from './captcha/captcha.service';
 
-export { FontManager, FontStyle, CanvasNotInstalledError } from './utils/font-manager';
+export {
+  FontManager,
+  FontStyle,
+  CanvasNotInstalledError,
+} from './utils/font-manager';
 export type { CaptchaFont } from './utils/font-manager';

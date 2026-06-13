@@ -1,5 +1,5 @@
 /**
- * GIF 编码器包装（基于 omggif）。
+ * GIF 编码器包装（基于 omggif）。 / GIF encoder wrapper (based on omggif).
  */
 import { GifWriter } from 'omggif';
 
@@ -35,7 +35,7 @@ export class GifEncoder {
     }
     this.palette = pal;
 
-    // 预分配一个足够大的 buffer（验证码 GIF 通常 < 100KB）
+    // 预分配一个足够大的 buffer（验证码 GIF 通常 < 100KB） / Pre-allocate a sufficiently large buffer (captcha GIFs are usually < 100KB)
     this.buf = Buffer.alloc(1024 * 1024);
     this.writer = new GifWriter(this.buf, width, height, {
       palette: this.palette,

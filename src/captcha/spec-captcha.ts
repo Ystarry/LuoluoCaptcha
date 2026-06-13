@@ -9,13 +9,13 @@ import {
 import { encodePng } from '../utils/png';
 
 /**
- * 普通（PNG）图形验证码。
- * 风格与 Java 版一致：白色背景，每个字符独立颜色，干扰线 + 圆，
- * 画一条贯穿的贝塞尔曲线。
+ * 普通（PNG）图形验证码。 / Standard (PNG) image CAPTCHA.
+ * 风格与 Java 版一致：白色背景，每个字符独立颜色，干扰线 + 圆， / Style consistent with Java version: white background, each character with independent color, interference lines + circles,
+ * 画一条贯穿的贝塞尔曲线。 / draws a full-length Bézier curve.
  *
- * 支持配置字体：
- * - 传入 fontPath 时，使用 TTF/OTF 字体渲染；
- * - 未传入或传入 null 时，不生成验证码。
+ * 支持配置字体： / Supports font configuration:
+ * - 传入 fontPath 时，使用 TTF/OTF 字体渲染； / - When fontPath is provided, renders with TTF/OTF font;
+ * - 未传入或传入 null 时，不生成验证码。 / - When not provided or null, does not generate CAPTCHA.
  */
 export class SpecCaptcha extends Captcha {
   private _ttfPath: string | null = null;
@@ -43,13 +43,13 @@ export class SpecCaptcha extends Captcha {
     }
   }
 
-  /** 绘制一帧 PNG。 */
+  /** 绘制一帧 PNG。 / Renders a PNG frame. */
   private _render(text: string): Buffer {
     const w = this.getWidth();
     const h = this.getHeight();
     const img = new RgbaImage(w, h, [255, 255, 255]);
 
-    // 1) 干扰圆
+    // 1) 干扰圆 / 1) Interference circles
     const palette = this._randomPalette();
     for (let i = 0; i < 4 + this.num(4); i++) {
       const color = palette[this.num(palette.length)];
@@ -60,7 +60,7 @@ export class SpecCaptcha extends Captcha {
       img.drawOval(cx, cy, rx, ry, color);
     }
 
-    // 2) 干扰线（贝塞尔曲线）
+    // 2) 干扰线（贝塞尔曲线） / 2) Interference lines (Bézier curves)
     for (let i = 0; i < 1 + this.num(2); i++) {
       const color = palette[this.num(palette.length)];
       const x1 = 5;
@@ -74,7 +74,7 @@ export class SpecCaptcha extends Captcha {
       img.drawCubic(x1, y1, cx, cy, cx1, cy1, x2, y2, color);
     }
 
-    // 3) 绘制字符（每个字符一种随机颜色）
+    // 3) 绘制字符（每个字符一种随机颜色） / 3) Draw characters (each character in a random color)
     const chars = text.split('');
     const cellW = Math.floor(w / chars.length);
 
@@ -82,7 +82,7 @@ export class SpecCaptcha extends Captcha {
       throw new Error('验证码需要配置可用的 TTF/OTF 字体');
     }
 
-    // 使用 TTF/OTF 字体
+    // 使用 TTF/OTF 字体 / Use TTF/OTF font
     const fontSize = Math.max(14, Math.min(h - 4, Math.floor(cellW * 0.9)));
     const baselineY = computeBaselineY(this._ttfPath, fontSize, h);
     for (let i = 0; i < chars.length; i++) {
@@ -104,7 +104,7 @@ export class SpecCaptcha extends Captcha {
     return encodePng(w, h, img.toRgb24());
   }
 
-  /** 给外部调用：画出图形并输出到可写流 */
+  /** 给外部调用：画出图形并输出到可写流 / For external calls: draws the image and outputs to a writable stream */
   public out(os: {
     write: (chunk: Buffer | Uint8Array | string) => unknown;
   }): boolean {

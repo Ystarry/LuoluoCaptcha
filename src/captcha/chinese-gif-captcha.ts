@@ -10,7 +10,7 @@ import {
 } from '../utils/draw';
 import { GifEncoder } from '../utils/gif';
 
-/** 判断是否为项目内置英文字体（不含中文 glyph） */
+/** 判断是否为项目内置英文字体（不含中文 glyph） / Determines whether the font is a built-in English font (without Chinese glyphs) */
 function _isBuiltinEnglishFont(fontPath: string | null): boolean {
   if (!fontPath) return false;
   const builtin = new Set([
@@ -28,7 +28,7 @@ function _isBuiltinEnglishFont(fontPath: string | null): boolean {
   return builtin.has(path.basename(fontPath).toLowerCase());
 }
 
-// 系统中文字体候选路径
+// 系统中文字体候选路径 / System Chinese font candidate paths
 const SYSTEM_FONT_CANDIDATES: string[] = [
   // macOS
   '/System/Library/Fonts/PingFang.ttc',
@@ -59,7 +59,7 @@ const SYSTEM_FONT_CANDIDATES: string[] = [
 ];
 
 /**
- * 中文图形验证码（GIF）。每帧高亮一个字符，其他字符灰色。
+ * 中文图形验证码（GIF）。每帧高亮一个字符，其他字符灰色。 / Chinese image CAPTCHA (GIF). Highlights one character per frame, others are gray.
  */
 export class ChineseGifCaptcha extends Captcha {
   private _ttfPath: string | null = null;
@@ -87,21 +87,21 @@ export class ChineseGifCaptcha extends Captcha {
     if (fontPath === undefined) {
       this._ttfPath = ChineseGifCaptcha._findChineseFont();
     } else if (fontPath === null) {
-      // 明确不使用项目字体，仅查找系统字体
+      // 明确不使用项目字体，仅查找系统字体 / Explicitly do not use project fonts, only search system fonts
       this._ttfPath = ChineseGifCaptcha._findSystemChineseFont();
     } else if (_isBuiltinEnglishFont(fontPath)) {
-      // 内置英文字体无法渲染中文，改用系统中文字体
+      // 内置英文字体无法渲染中文，改用系统中文字体 / Built-in English fonts cannot render Chinese, switch to system Chinese fonts
       this._ttfPath = ChineseGifCaptcha._findSystemChineseFont();
     } else {
       this._ttfPath = fontPath;
     }
   }
 
-  /** 常用汉字池（约 200 个高频字），验证码从中随机选取 */
+  /** 常用汉字池（约 200 个高频字），验证码从中随机选取 / Common Chinese character pool (~200 high-frequency characters), CAPTCHA randomly selects from it */
   private static readonly COMMON_CHINESE =
     '的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取完举色采青';
 
-  /** 生成中文验证码字符 */
+  /** 生成中文验证码字符 / Generates Chinese CAPTCHA characters */
   protected alphas(): string[] {
     const pool = ChineseGifCaptcha.COMMON_CHINESE;
     const cs: string[] = new Array(this.len);
@@ -160,7 +160,7 @@ export class ChineseGifCaptcha extends Captcha {
     const w = this.getWidth();
     const h = this.getHeight();
     const palette = this._palette();
-    const encoder = new GifEncoder(w, h, 200, 0); // 每帧 200ms
+    const encoder = new GifEncoder(w, h, 200, 0); // 每帧 200ms / 200ms per frame
     const chars = text.split('');
 
     const cellW = Math.max(12, Math.floor(w / chars.length));

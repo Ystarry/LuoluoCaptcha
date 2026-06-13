@@ -1,17 +1,17 @@
 /**
- * 绘图工具（纯 JS，无需 canvas 原生模块）。
+ * 绘图工具（纯 JS，无需 canvas 原生模块）。 / Drawing utilities (pure JS, no native canvas module required).
  *
- * 提供：
- *   - 32 位 RGBA 帧缓冲 + `toRgb24()` -> PNG 字节
- *   - 画点、画线、画圆、画椭圆、画二次/三次贝塞尔曲线
- *   - TTF/OTF/TTC 字体渲染
+ * 提供： / Provides:
+ *   - 32 位 RGBA 帧缓冲 + `toRgb24()` -> PNG 字节 / 32-bit RGBA framebuffer + `toRgb24()` -> PNG bytes
+ *   - 画点、画线、画圆、画椭圆、画二次/三次贝塞尔曲线 / Pixel, line, circle, ellipse, quadratic/cubic Bézier curves
+ *   - TTF/OTF/TTC 字体渲染 / TTF/OTF/TTC font rendering
  *
- * 设计目标：可读性优先、纯 JS，无需 canvas 原生模块。
+ * 设计目标：可读性优先、纯 JS，无需 canvas 原生模块。 / Design goal: readability first, pure JS, no native canvas module required.
  */
 
 /**
- * 一张用于在内存中绘制的图像。
- * RGBA 8 位深度。
+ * 一张用于在内存中绘制的图像。 / An image for in-memory drawing.
+ * RGBA 8 位深度。 / RGBA 8-bit depth.
  */
 export class RgbaImage {
   public readonly width: number;
@@ -19,7 +19,7 @@ export class RgbaImage {
   public readonly stride: number; // bytes per row
   public readonly buffer: Buffer;
 
-  /** 背景色，填充整个画布。 */
+  /** 背景色，填充整个画布。 / Background color, fills the entire canvas. */
   constructor(
     width: number,
     height: number,
@@ -37,7 +37,7 @@ export class RgbaImage {
     }
   }
 
-  /** 画点 */
+  /** 画点 / Draw a pixel */
   public setPixel(
     x: number,
     y: number,
@@ -52,7 +52,7 @@ export class RgbaImage {
     this.buffer[i + 1] = g;
     this.buffer[i + 2] = b;
     if (a < 255) {
-      // 简单 alpha 混合
+      // 简单 alpha 混合 / Simple alpha blending
       const inv = a / 255;
       this.buffer[i] = Math.round(this.buffer[i] * (1 - inv) + r * inv);
       this.buffer[i + 1] = Math.round(this.buffer[i + 1] * (1 - inv) + g * inv);
@@ -154,7 +154,7 @@ export class RgbaImage {
     this.setPixel(cx - x, cy - y, color[0], color[1], color[2]);
   }
 
-  /** 二次贝塞尔曲线：(x1, y1) -> (x2, y2), 控制点 (cx, cy) */
+  /** 二次贝塞尔曲线：(x1, y1) -> (x2, y2), 控制点 (cx, cy) / Quadratic Bézier curve: (x1, y1) -> (x2, y2), control point (cx, cy) */
   public drawQuad(
     x1: number,
     y1: number,
@@ -184,7 +184,7 @@ export class RgbaImage {
     }
   }
 
-  /** 三次贝塞尔曲线（两个控制点） */
+  /** 三次贝塞尔曲线（两个控制点） / Cubic Bézier curve (two control points) */
   public drawCubic(
     x1: number,
     y1: number,
@@ -225,8 +225,8 @@ export class RgbaImage {
   }
 
   /**
-   * 导出为 24-bit RGB 字节流（去掉 alpha，用于 PNG encoder）。
-   * 顺序：左上到右下，每像素 3 字节。
+   * 导出为 24-bit RGB 字节流（去掉 alpha，用于 PNG encoder）。 / Export as 24-bit RGB byte stream (remove alpha, for PNG encoder).
+   * 顺序：左上到右下，每像素 3 字节。 / Order: top-left to bottom-right, 3 bytes per pixel.
    */
   public toRgb24(): Buffer {
     const out = Buffer.alloc(this.width * this.height * 3);
@@ -244,30 +244,30 @@ export class RgbaImage {
 }
 
 // ————————————————————————————————————————————
-// TTF/OTF 渲染（基于 opentype.js 纯 JS 实现）
+// TTF/OTF 渲染（基于 opentype.js 纯 JS 实现） / TTF/OTF rendering (pure JS implementation based on opentype.js)
 // ————————————————————————————————————————————
 
 import * as fs from 'fs';
 import * as path from 'path';
 import { extractFontFromTtc, isTtcFile } from './ttc-extract';
 
-/** 单个点（坐标是整数像素） */
+/** 单个点（坐标是整数像素） / Single point (coordinates are integer pixels) */
 interface Point {
   x: number;
   y: number;
 }
 
-/** 已加载字体的缓存 */
+/** 已加载字体的缓存 / Cache for loaded fonts */
 const fontCache = new Map<string, any>();
 
-/** 从文件路径加载字体（同步，带缓存）；失败返回 null。
- *  自动识别 TTC（TrueType Collection）文件。
+/** 从文件路径加载字体（同步，带缓存）；失败返回 null。 / Load font from file path (synchronous, with cache); returns null on failure.
+ *  自动识别 TTC（TrueType Collection）文件。 / Automatically detects TTC (TrueType Collection) files.
  */
 function loadFont(filePath: string): any | null {
   if (fontCache.has(filePath)) {
     const cached = fontCache.get(filePath)!;
     if (cached !== null) return cached;
-    // 之前缓存了 null（加载失败），现在清除缓存重试
+    // 之前缓存了 null（加载失败），现在清除缓存重试 / Previously cached null (load failed), clear cache and retry now
     fontCache.delete(filePath);
   }
   try {
@@ -298,11 +298,11 @@ function loadFont(filePath: string): any | null {
   }
 }
 
-/** 把 opentype.Path 转成"子路径 + 点数组"，方便扫描线填充 */
+/** 把 opentype.Path 转成"子路径 + 点数组"，方便扫描线填充 / Convert opentype.Path to "subpaths + point arrays" for scanline filling */
 function pathToSubpaths(fontPath: any): Point[][] {
   const subpaths: Point[][] = [];
   let current: Point[] = [];
-  // opentype.Path 的 commands 数组形如：
+  // opentype.Path 的 commands 数组形如： / The commands array of opentype.Path looks like:
   // [{ type: "M", x, y }, { type: "L", x, y }, { type: "C", x1, y1, x2, y2, x, y },
   //  { type: "Q", x1, y1, x, y }, { type: "Z" }]
   for (const cmd of fontPath.commands) {
@@ -313,7 +313,7 @@ function pathToSubpaths(fontPath: any): Point[][] {
     } else if (t === 'L') {
       current.push({ x: cmd.x, y: cmd.y });
     } else if (t === 'C') {
-      // 三次 Bezier → 用 10 段折线近似
+      // 三次 Bezier → 用 10 段折线近似 / Cubic Bezier -> approximated with 10 line segments
       const p0 = current[current.length - 1];
       const p1 = { x: cmd.x1, y: cmd.y1 };
       const p2 = { x: cmd.x2, y: cmd.y2 };
@@ -334,7 +334,7 @@ function pathToSubpaths(fontPath: any): Point[][] {
         current.push({ x, y });
       }
     } else if (t === 'Q') {
-      // 二次 Bezier
+      // 二次 Bezier / Quadratic Bezier
       const p0 = current[current.length - 1];
       const p1 = { x: cmd.x1, y: cmd.y1 };
       const p2 = { x: cmd.x, y: cmd.y };
@@ -354,13 +354,13 @@ function pathToSubpaths(fontPath: any): Point[][] {
   return subpaths;
 }
 
-/** 扫描线填充：给定若干子路径，返回 (x,y) 点集（整数像素坐标） */
+/** 扫描线填充：给定若干子路径，返回 (x,y) 点集（整数像素坐标） / Scanline fill: given subpaths, returns a set of (x,y) points (integer pixel coordinates) */
 function rasterizeSubpaths(
   subpaths: Point[][],
   w: number,
   h: number,
 ): Set<number> {
-  // 找到 y 范围
+  // 找到 y 范围 / Find the y-range
   let minY = Infinity,
     maxY = -Infinity;
   for (const sp of subpaths) {
@@ -376,16 +376,16 @@ function rasterizeSubpaths(
 
   const filled = new Set<number>();
 
-  // 对每条扫描线，收集与所有边的交点 x，然后在奇偶区间填充
+  // 对每条扫描线，收集与所有边的交点 x，然后在奇偶区间填充 / For each scanline, collect intersection x with all edges, then fill in odd-even intervals
   for (let y = y0; y <= y1; y++) {
-    const scanY = y + 0.5; // 在像素中心扫描
+    const scanY = y + 0.5; // 在像素中心扫描 / scan at pixel center
     const xs: number[] = [];
     for (const sp of subpaths) {
       const n = sp.length;
       for (let i = 0; i < n; i++) {
         const a = sp[i];
         const b = sp[(i + 1) % n];
-        // 只有在边跨越扫描线时才相交
+        // 只有在边跨越扫描线时才相交 / Only intersect when the edge crosses the scanline
         if ((a.y <= scanY && b.y > scanY) || (a.y > scanY && b.y <= scanY)) {
           const t = (scanY - a.y) / (b.y - a.y);
           const x = a.x + t * (b.x - a.x);
@@ -394,7 +394,7 @@ function rasterizeSubpaths(
       }
     }
     xs.sort((p, q) => p - q);
-    // even-odd fill：每两个交点之间是一个内部区间
+    // even-odd fill：每两个交点之间是一个内部区间 / even-odd fill: between every two intersection points is an interior interval
     for (let i = 0; i + 1 < xs.length; i += 2) {
       const xStart = Math.max(0, Math.floor(xs[i]));
       const xEnd = Math.min(w - 1, Math.floor(xs[i + 1]));
@@ -407,15 +407,15 @@ function rasterizeSubpaths(
 }
 
 /**
- * 用外部 TTF/OTF 字体把 text 绘制到 RgbaImage。
+ * 用外部 TTF/OTF 字体把 text 绘制到 RgbaImage。 / Draw text onto RgbaImage using an external TTF/OTF font.
  *
- * y 参数是 baseline 的 y 坐标（像素坐标系中 y 越大越靠下）。
- * 字形会在 baseline 上下分布：
+ * y 参数是 baseline 的 y 坐标（像素坐标系中 y 越大越靠下）。 / The y parameter is the baseline y-coordinate (in pixel coordinates, larger y means lower).
+ * 字形会在 baseline 上下分布： / Glyphs are distributed above and below the baseline:
  *   - top = y - ascender * fontSize / unitsPerEm
  *   - bottom = y + |descender| * fontSize / unitsPerEm
  *
- * 性能说明：每次调用都会重新生成路径（字符数 × ~100 个点），对验证码场景（几
- * 个字符、100×50 左右的画布）是足够快的，毫秒级完成。
+ * 性能说明：每次调用都会重新生成路径（字符数 × ~100 个点），对验证码场景（几 / Performance note: each call regenerates the path (char count × ~100 points), which is fast enough for captcha scenarios (a few
+ * 个字符、100×50 左右的画布）是足够快的，毫秒级完成。 / characters, ~100×50 canvas), completing in milliseconds.
  */
 export function drawTextWithFont(
   img: RgbaImage,
@@ -428,7 +428,7 @@ export function drawTextWithFont(
 ): void {
   const font = loadFont(fontPath);
   if (!font) {
-    // 字体不可用：退化成"装饰方框"。
+    // 字体不可用：退化成"装饰方框"。 / Font unavailable: degrade to a "decorative box".
     // y 被当作 baseline，字符占 [y - fontSize*0.85, y + fontSize*0.15]
     const boxW = Math.max(4, Math.floor(fontSize * 0.7));
     const boxH = Math.max(6, Math.floor(fontSize));
@@ -461,7 +461,7 @@ export function drawTextWithFont(
   }
 }
 
-/** 基于字体 ascender/descender 计算最合适的 baseline y，让字符在 h 内垂直居中 */
+/** 基于字体 ascender/descender 计算最合适的 baseline y，让字符在 h 内垂直居中 / Calculate the optimal baseline y based on font ascender/descender to vertically center the character within height h */
 export function computeBaselineY(
   fontPath: string | null,
   fontSize: number,
@@ -478,7 +478,7 @@ export function computeBaselineY(
   return Math.max(Math.ceil(asc), Math.floor(top + asc));
 }
 
-/** 用外部 TTF/OTF 字体估算 text 的宽度（用于居中/分段布局） */
+/** 用外部 TTF/OTF 字体估算 text 的宽度（用于居中/分段布局） / Estimate text width using an external TTF/OTF font (for centering/segmented layout) */
 export function measureTextWithFont(
   text: string,
   fontPath: string,

@@ -1,27 +1,18 @@
 import { Controller, Get, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { AppService } from './app.service';
 import { CaptchaService, CaptchaType } from './captcha/captcha.service';
 import { ArithmeticCaptcha } from './captcha/arithmetic-captcha';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private readonly captchaService: CaptchaService,
-  ) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
+  constructor(private readonly captchaService: CaptchaService) {}
 
   /**
-   * 获取验证码图片（通用接口，通过 query 参数指定类型）
-   * @param type 验证码类型：spec(英文 PNG，默认) / gif(英文 GIF) / chinese(中文 PNG) / chinese-gif(中文 GIF) / arithmetic(算术 PNG)
-   * @param len 字符数量（算术验证码为运算数个数）
-   * @param digits 算术验证码专用：每个运算数的位数（1=0-9, 2=10-99）
-   * @param res Express Response
+   * 获取验证码图片（通用接口，通过 query 参数指定类型） / Get captcha image (generic interface, specify type via query parameter)
+   * @param type 验证码类型：spec(英文 PNG，默认) / gif(英文 GIF) / chinese(中文 PNG) / chinese-gif(中文 GIF) / arithmetic(算术 PNG) / Captcha type: spec (English PNG, default) / gif (English GIF) / chinese (Chinese PNG) / chinese-gif (Chinese GIF) / arithmetic (Arithmetic PNG)
+   * @param len 字符数量（算术验证码为运算数个数） / Number of characters (number of operands for arithmetic captcha)
+   * @param digits 算术验证码专用：每个运算数的位数（1=0-9, 2=10-99） / For arithmetic captcha only: number of digits per operand (1=0-9, 2=10-99)
+   * @param res Express Response / Express Response
    */
   @Get('captcha/image')
   getCaptchaImage(
@@ -53,31 +44,31 @@ export class AppController {
     res.send(image);
   }
 
-  /** 英文 PNG 验证码（默认） */
+  /** 英文 PNG 验证码（默认） / English PNG captcha (default) */
   @Get('captcha/spec')
   getSpecCaptcha(@Res() res: Response): void {
     this.sendCaptcha('spec', res);
   }
 
-  /** 英文 GIF 验证码 */
+  /** 英文 GIF 验证码 / English GIF captcha */
   @Get('captcha/gif')
   getGifCaptcha(@Res() res: Response): void {
     this.sendCaptcha('gif', res);
   }
 
-  /** 中文 PNG 验证码 */
+  /** 中文 PNG 验证码 / Chinese PNG captcha */
   @Get('captcha/chinese')
   getChineseCaptcha(@Res() res: Response): void {
     this.sendCaptcha('chinese', res);
   }
 
-  /** 中文 GIF 验证码 */
+  /** 中文 GIF 验证码 / Chinese GIF captcha */
   @Get('captcha/chinese-gif')
   getChineseGifCaptcha(@Res() res: Response): void {
     this.sendCaptcha('chinese-gif', res);
   }
 
-  /** 算术 PNG 验证码 */
+  /** 算术 PNG 验证码 / Arithmetic PNG captcha */
   @Get('captcha/arithmetic')
   getArithmeticCaptcha(
     @Query('len') len: string,

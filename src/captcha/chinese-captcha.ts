@@ -8,7 +8,7 @@ import {
 } from '../utils/draw';
 import { encodePng } from '../utils/png';
 
-// 常见系统中文字体路径（覆盖 macOS / Windows / 主流 Linux 发行版）
+// 常见系统中文字体路径（覆盖 macOS / Windows / 主流 Linux 发行版） / Common system Chinese font paths (covering macOS / Windows / major Linux distributions)
 const SYSTEM_FONT_CANDIDATES: string[] = [
   // macOS
   '/System/Library/Fonts/PingFang.ttc',
@@ -46,7 +46,7 @@ function _findFile(p: string): boolean {
   }
 }
 
-/** 判断是否为项目内置英文字体（不含中文 glyph） */
+/** 判断是否为项目内置英文字体（不含中文 glyph） / Determines whether the font is a built-in English font (without Chinese glyphs) */
 function _isBuiltinEnglishFont(fontPath: string | null): boolean {
   if (!fontPath) return false;
   const builtin = new Set([
@@ -64,7 +64,7 @@ function _isBuiltinEnglishFont(fontPath: string | null): boolean {
   return builtin.has(path.basename(fontPath).toLowerCase());
 }
 
-/** 项目中文字体路径（非内置英文字体） */
+/** 项目中文字体路径（非内置英文字体） / Project Chinese font path (non-built-in English fonts) */
 function _findProjectChineseFont(): string | null {
   let dir = __dirname;
   for (let i = 0; i < 6; i++) {
@@ -141,7 +141,7 @@ function _findProjectChineseFont(): string | null {
   return null;
 }
 
-/** 查找系统字体路径 */
+/** 查找系统字体路径 / Finds system font path */
 function _findSystemChineseFont(): string | null {
   for (const p of SYSTEM_FONT_CANDIDATES) {
     if (_findFile(p)) return p;
@@ -149,18 +149,18 @@ function _findSystemChineseFont(): string | null {
   return null;
 }
 
-/** 查找可用的中文 TTF/OTF 路径。按优先级：项目 fonts/ > 系统路径 */
+/** 查找可用的中文 TTF/OTF 路径。按优先级：项目 fonts/ > 系统路径 / Finds available Chinese TTF/OTF paths. Priority: project fonts/ > system paths */
 function findChineseFont(): string | null {
   return _findProjectChineseFont() ?? _findSystemChineseFont();
 }
 
 /**
- * 中文图形验证码（PNG）。
+ * 中文图形验证码（PNG）。 / Chinese image CAPTCHA (PNG).
  *
- * - 当传入的 fontPath 是中文字体文件路径：使用 TTF 绘制真实汉字
- * - 当 fontPath 为 null：不加载项目字体，仅查找系统字体
- * - 当 fontPath 为 undefined：使用默认逻辑（项目字体 > 系统字体）
- * - 否则：使用 ASCII 内置 6x7 字形（仅英文/数字可见）或占位方框
+ * - 当传入的 fontPath 是中文字体文件路径：使用 TTF 绘制真实汉字 / - When fontPath is a Chinese font file path: draws real Chinese characters with TTF
+ * - 当 fontPath 为 null：不加载项目字体，仅查找系统字体 / - When fontPath is null: does not load project fonts, only searches system fonts
+ * - 当 fontPath 为 undefined：使用默认逻辑（项目字体 > 系统字体） / - When fontPath is undefined: uses default logic (project fonts > system fonts)
+ * - 否则：使用 ASCII 内置 6x7 字形（仅英文/数字可见）或占位方框 / - Otherwise: uses built-in ASCII 6x7 glyphs (English/numbers only) or placeholder boxes
  */
 export class ChineseCaptcha {
   private _width = 130;
@@ -182,17 +182,17 @@ export class ChineseCaptcha {
     if (fontPath === undefined) {
       this._fontPath = findChineseFont();
     } else if (fontPath === null) {
-      // 明确不使用项目字体，仅查找系统字体
+      // 明确不使用项目字体，仅查找系统字体 / Explicitly do not use project fonts, only search system fonts
       this._fontPath = _findSystemChineseFont();
     } else if (_isBuiltinEnglishFont(fontPath)) {
-      // 内置英文字体无法渲染中文，改用系统中文字体
+      // 内置英文字体无法渲染中文，改用系统中文字体 / Built-in English fonts cannot render Chinese, switch to system Chinese fonts
       this._fontPath = _findSystemChineseFont();
     } else {
       this._fontPath = fontPath;
     }
   }
 
-  /** 3500 常用汉字，从中随机选取 */
+  /** 3500 常用汉字，从中随机选取 / 3500 common Chinese characters, randomly selected from this pool */
   private static readonly COMMON_CHINESE =
     '的一是在不了有和人这中大为上个国我以要他时来用们生到作地于出就分对成会可主发年动同工也能下过子说产种面而方后多定行学法所民得经十三之进着等部度家电力里如水化高自二理起小物现实加量都两体制机当使点从业本去把性好应开它合还因由其些然前外天政四日那社义事平形相全表间样与关各重新线内数正心反你明看原又么利比或但质气第向道命此变条只没结解问意建月公无系军很情者最立代想已通并提直题党程展五果料象员革位入常文总次品式活设及管特件长求老头基资边流路级少图山统接知较将组见计别她手角期根论运农指几九区强放决西被干做必战先回则任取完举色采青';
 
@@ -222,7 +222,7 @@ export class ChineseCaptcha {
       [0, 150, 199],
     ];
 
-    // 干扰圆
+    // 干扰圆 / Interference circles
     for (let i = 0; i < 5 + Math.floor(Math.random() * 5); i++) {
       const rx = 2 + Math.floor(Math.random() * 10);
       const ry = 2 + Math.floor(Math.random() * 8);
@@ -234,7 +234,7 @@ export class ChineseCaptcha {
         palette[Math.floor(Math.random() * palette.length)],
       );
     }
-    // 干扰曲线
+    // 干扰曲线 / Interference curves
     for (let i = 0; i < 1 + Math.floor(Math.random() * 3); i++) {
       img.drawQuad(
         5,
@@ -247,10 +247,10 @@ export class ChineseCaptcha {
       );
     }
 
-    // 文本
+    // 文本 / Text
     const chars = text.split('');
     const cellW = Math.max(12, Math.floor(w / chars.length));
-    // 字体大小：占图像高度的 70%（但不超过 cellW 的 85%）
+    // 字体大小：占图像高度的 70%（但不超过 cellW 的 85%） / Font size: 70% of image height (but no more than 85% of cellW)
     const fontSize = Math.max(14, Math.min(h - 6, Math.floor(cellW * 0.85)));
     const baselineY = computeBaselineY(this._fontPath, fontSize, h);
 

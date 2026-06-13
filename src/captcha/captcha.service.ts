@@ -20,7 +20,7 @@ export interface CaptchaImageResult {
   image: Buffer;
   contentType: string;
   text: string;
-  /** 调试信息：实际使用的字体路径或模式 */
+  /** 调试信息：实际使用的字体路径或模式 / Debug info: actual font path or pattern used */
   debugFont?: string;
 }
 
@@ -39,23 +39,23 @@ export interface LuoluoConfigType {
 }
 
 /**
- * 验证码服务：生成图片，不保存答案，由调用方自行管理。
+ * 验证码服务：生成图片，不保存答案，由调用方自行管理。 / CAPTCHA service: generates images, does not store answers; managed by the caller.
  *
- * 设计要点：
- * - 不保存验证码，生成后立即返回 text，由调用方自行存储（session / redis / memory）。
- * - 支持 5 种风格：spec（默认）、gif、chinese、chinese-gif、arithmetic。
- * - 配置从 luoluo.yaml 读取，支持动态调整长度、字体、算术运算参数。
+ * 设计要点： / Design highlights:
+ * - 不保存验证码，生成后立即返回 text，由调用方自行存储（session / redis / memory）。 / - Does not store CAPTCHA; returns text immediately after generation for caller to store (session / redis / memory).
+ * - 支持 5 种风格：spec（默认）、gif、chinese、chinese-gif、arithmetic。 / - Supports 5 styles: spec (default), gif, chinese, chinese-gif, arithmetic.
+ * - 配置从 luoluo.yaml 读取，支持动态调整长度、字体、算术运算参数。 / - Configuration read from luoluo.yaml, supports dynamic adjustment of length, font, and arithmetic parameters.
  */
 @Injectable()
 export class CaptchaService {
-  /** 图片默认宽 */
+  /** 图片默认宽 / Default image width */
   public static readonly WIDTH = 130;
-  /** 图片默认高 */
+  /** 图片默认高 / Default image height */
   public static readonly HEIGHT = 48;
-  /** 字符数（算术验证码忽略，固定显示一个算式） */
+  /** 字符数（算术验证码忽略，固定显示一个算式） / Number of characters (ignored by arithmetic CAPTCHA, which shows a fixed expression) */
   public static readonly LEN = 4;
 
-  /** 返回配置中设置的默认验证码类型 */
+  /** 返回配置中设置的默认验证码类型 / Returns the default CAPTCHA type set in configuration */
   getDefaultType(): CaptchaType {
     const config = this.readConfig();
     const cfgType = config.captcha?.type;
@@ -71,13 +71,13 @@ export class CaptchaService {
       : 'spec';
   }
 
-  /** 生成一张验证码图片，并把答案直接返回。 */
+  /** 生成一张验证码图片，并把答案直接返回。 / Generates a CAPTCHA image and returns the answer directly. */
   create(type?: CaptchaType): CaptchaImageResult {
     const config = this.readConfig();
     const t = type ?? this.getDefaultTypeFromConfig(config);
     const captcha = this.createCaptcha(t, config);
     const buffer = captcha.toBuffer();
-    // text() 是一个方法，会惰性生成 chars
+    // text() 是一个方法，会惰性生成 chars / text() is a method that lazily generates chars
     const text =
       typeof (captcha as unknown as { text: () => string }).text === 'function'
         ? (captcha as unknown as { text: () => string }).text()
@@ -85,7 +85,7 @@ export class CaptchaService {
 
     const fontPath = this.resolveFont(config.captcha?.font);
 
-    // 部分验证码类（如 ChineseCaptcha）可能在内部替换字体，获取实际使用的字体
+    // 部分验证码类（如 ChineseCaptcha）可能在内部替换字体，获取实际使用的字体 / Some CAPTCHA classes (e.g. ChineseCaptcha) may replace fonts internally; get the actually used font
     let actualFont: string | null | undefined = fontPath;
     const c = captcha as any;
     if (c._fontPath) {
@@ -122,19 +122,19 @@ export class CaptchaService {
       : 'spec';
   }
 
-  /** 把验证码以 Nest StreamableFile 形式返回，便于直接在 Controller 里使用。 */
+  /** 把验证码以 Nest StreamableFile 形式返回，便于直接在 Controller 里使用。 / Returns the CAPTCHA as a Nest StreamableFile for direct use in Controller. */
   createAsStreamable(type?: CaptchaType): {
     streamable: StreamableFile;
     contentType: string;
     text: string;
   } {
     const { image, contentType, text } = this.create(type);
-    // StreamableFile 接受 Buffer
+    // StreamableFile 接受 Buffer / StreamableFile accepts Buffer
     const streamable = new StreamableFile(image);
     return { streamable, contentType, text };
   }
 
-  // —— 私有工具 ————————————————————————————————————
+  // —— 私有工具 ———————————————————————————————————— / Private utilities
 
   private readConfig(): LuoluoConfigType {
     const projectRoot = process.cwd();
@@ -165,13 +165,13 @@ export class CaptchaService {
     const h = CaptchaService.HEIGHT;
     const cfg = config.captcha || {};
 
-    // 验证码长度：spec/gif/chinese/chinese-gif 使用 cfg.length，arithmetic 使用 cfg.arithmetic.length
+    // 验证码长度：spec/gif/chinese/chinese-gif 使用 cfg.length，arithmetic 使用 cfg.arithmetic.length / CAPTCHA length: spec/gif/chinese/chinese-gif use cfg.length, arithmetic uses cfg.arithmetic.length
     const len =
       type === 'arithmetic'
         ? cfg.arithmetic?.length || 2
         : cfg.length || CaptchaService.LEN;
 
-    // 字体处理：项目字体返回路径，系统字体返回 null，未配置返回 undefined
+    // 字体处理：项目字体返回路径，系统字体返回 null，未配置返回 undefined / Font handling: project fonts return path, system fonts return null, unconfigured returns undefined
     const fontPath = this.resolveFont(cfg.font);
 
     switch (type) {
@@ -194,10 +194,10 @@ export class CaptchaService {
   }
 
   /**
-   * 解析字体配置：
-   * - 空 / 未配置：返回 undefined（让各验证码类使用默认逻辑）
-   * - 项目 fonts 目录下的文件：返回完整路径
-   * - 其他（系统字体名）：返回 null（明确不加载项目字体）
+   * 解析字体配置： / Resolves font configuration:
+   * - 空 / 未配置：返回 undefined（让各验证码类使用默认逻辑） / - Empty / not configured: returns undefined (lets each CAPTCHA class use default logic)
+   * - 项目 fonts 目录下的文件：返回完整路径 / - Files under project fonts directory: returns full path
+   * - 其他（系统字体名）：返回 null（明确不加载项目字体） / - Others (system font names): returns null (explicitly do not load project fonts)
    */
   private resolveFont(font?: string): string | undefined | null {
     if (!font) return undefined;
@@ -206,7 +206,7 @@ export class CaptchaService {
     if (fs.existsSync(projectFont)) {
       return projectFont;
     }
-    // 系统字体：不加载项目字体，返回 null
+    // 系统字体：不加载项目字体，返回 null / System font: do not load project fonts, return null
     return null;
   }
 
